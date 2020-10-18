@@ -1,0 +1,302 @@
+
+//declare x-csrf-token for ajax - post request
+$.ajaxSetup
+({
+    headers:
+        {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+});
+
+
+$('#submit_sign_up').click(function() //submit registration of user
+{
+    var btn = $(this);
+
+    var formData = new FormData();
+    var dataToExtract;
+
+    var email_add_register = $('#reg_email_address').val();
+    var full_name_register =  $('#reg_full_name').val();
+    var password_register =  $('#reg_password').val();
+    var confirm_pass_reg = $('#reg_confirm_password').val();
+
+    //appending of 4 variables to pass on a form data
+
+    formData.append('email', email_add_register);
+    formData.append('full_name', full_name_register);
+    formData.append('password', password_register);
+    formData.append('confirm_password', confirm_pass_reg);
+
+    //used AJAX to transfer data through post
+    $.ajax
+    ({
+        type : 'post',
+        url : 'register_with_email',
+        contentType: false,
+        processData: false,
+        async : true,
+        data : formData,
+        beforeSend : function()
+        {
+            btn.attr('disabled', true); //disabled button for double encoding purpose
+        },
+        success : function(data)
+        {
+            dataToExtract = data;
+        },
+        complete : function()
+        {
+            if(dataToExtract[0] == 'success')
+            {
+                btn.attr('disabled', false);
+                getVerificationToken(dataToExtract[1], email_add_register, btn)  //called function to get verification token and redirect to verification page
+            }
+            else
+            {
+                btn.attr('disabled', false);
+
+                var obj = JSON.parse(dataToExtract);
+                var converted2 = Object.entries(obj.errors);
+
+                $('#fill_up_error_message_register').html('');
+
+                for(var i=0; i < converted2.length; i++)
+                {
+                    $('#fill_up_error_message_register').append('<p style="color: red">*' +converted2[i][1][0]+ '</p>');
+                }
+
+                $('#show_message_modal_error_register').modal('show') // show all exceptions in a warning modal
+            }
+        },
+        error : function()
+        {
+            alert('Unexpected error.');
+            btn.attr('disabled', false);
+        }
+    });
+});
+
+
+$('#hide_show_reg_password').click(function()
+{
+    var checkBox = $('#reg_password');
+
+    if (checkBox.attr('type') === "password")
+    {
+        checkBox.attr('type', 'text');
+    }
+    else
+    {
+        checkBox.attr('type', 'password');
+    }
+
+});
+
+$('#hide_show_login_password').click(function()
+{
+    var checkBox = $('#login_password');
+
+    if (checkBox.attr('type') === "password")
+    {
+        checkBox.attr('type', 'text');
+    }
+    else
+    {
+        checkBox.attr('type', 'password');
+    }
+});
+
+$('#submit_validation_code').click(function()
+{
+    var btn = $(this);
+
+    var validation_val = $('#validation_code_to_pass').val();
+
+    if(validation_val == '')
+    {
+        alert('Please enter the validation code.')
+    }
+    else
+    {
+        var formData = new FormData();
+
+        formData.append('validate_code', validation_val)
+
+        $.ajax
+        ({
+            type: 'post',
+            url: 'validate_from_email_use_code',
+            contentType: false,
+            processData: false,
+            async: true,
+            data: formData,
+            beforeSend: function ()
+            {
+                btn.attr('disabled', true);
+            },
+            success: function (data)
+            {
+                btn.attr('disabled', false);
+
+
+                if(data > 0)
+                {
+
+                    window.location.href = '/go_to_login_page';
+                }
+                else
+                {
+                    $('#show_message_modal_validation_code').modal('show');
+                }
+            },
+            error: function ()
+            {
+
+                alert('Unexpected error.');
+                btn.attr('disabled', false);
+            }
+        });
+    }
+
+});
+
+function getVerificationToken(tokl, recipient, btn)
+{
+    var formDataVerifCode = new FormData();
+
+    formDataVerifCode.append('bearer_tok', tokl);
+    formDataVerifCode.append('recipient', recipient);
+
+    $.ajax
+    ({
+        type : 'post',
+        url : 'generated_verification_code_to_email',
+        contentType: false,
+        processData: false,
+        async: true,
+        data: formDataVerifCode,
+        beforeSend : function()
+        {
+            $('#show_spinner_modal_sending_email').modal({backdrop : 'static'})
+        },
+        success: function ()
+        {
+            $('#show_spinner_modal_sending_email').modal('hide');
+        },
+        complete : function()
+        {
+            btn.attr('disabled', false);
+            window.location.href = '/go_to_verification_page';
+        },
+        error: function ()
+        {
+            $('#show_spinner_modal_sending_email').modal('hide');
+
+            setTimeout(function()
+            {
+                alert('Unexpected error.')
+            }, 1000);
+
+            btn.attr('disabled', false);
+        }
+    });
+}
+
+$('#submit_log_in').click(function()
+{
+    var btn = $(this);
+
+    var email_add = $('#login_email_address').val();
+    var pass = $('#login_password').val();
+
+    var formDataLogIn = new FormData();
+
+    formDataLogIn.append('email_add', email_add);
+    formDataLogIn.append('pass', pass);
+
+    $.ajax
+    ({
+        type : 'post',
+        url : 'user_log_in',
+        contentType: false,
+        processData: false,
+        async: true,
+        data : formDataLogIn,
+        beforeSend : function()
+        {
+            btn.attr('disabled', true);
+            $('#show_spinner_modal_log_in').modal({backdrop : 'static'})
+        },
+        success : function(data)
+        {
+            console.log(data);
+            if(data == 200)
+            {
+                $('#show_spinner_modal_log_in').modal('hide');
+                btn.attr('disabled', false);
+                window.location.href = '/success';
+
+            }
+            else
+            {
+                $('#show_spinner_modal_log_in').modal('hide');
+
+                var obj = JSON.parse(data);
+                var convertedArray = Object.entries(obj);
+
+                $('#fill_up_error_message_login').html('');
+
+                if(convertedArray[1][0] == 'error_code')
+                {
+                    $('#fill_up_error_message_login').html('<p style="color: red">'+convertedArray[0][1]+'</p>');
+                }
+                else if(convertedArray[1][0] == 'errors')
+                {
+                    var convertedErrors = Object.values(obj.errors);
+
+                    console.log(convertedErrors);
+
+                    for(var v=0; v < convertedErrors.length; v++)
+                    {
+                        $('#fill_up_error_message_login').append('<p style="color: red">'+convertedErrors[v]+'</p>')
+                    }
+                }
+            }
+            setTimeout(function()
+            {
+               $('#show_message_modal_error_login').modal('show');
+
+            }, 1000);
+
+            btn.attr('disabled', false);
+        },
+        error : function()
+        {
+            $('#show_message_modal_error_login').modal('hide');
+
+            setTimeout(function()
+            {
+                alert('Unexpected error.')
+            }, 1000);
+
+            btn.attr('disabled', false);
+        }
+    });
+});
+
+$('#reg_password').on('keyup', function()
+{
+    if($(this).val().length >= 8)
+    {
+        $('#psswordOnchangeParam').html('Valid password');
+    }
+    else if($(this).val().length < 8)
+    {
+        $('#psswordOnchangeParam').html('Enter atleast 8 characaters');
+    }
+});
+
+
+
+
