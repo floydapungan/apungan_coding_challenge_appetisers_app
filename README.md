@@ -1,4 +1,4 @@
-# Simple Registration Sytem
+# Simple Registration System
 Coding exam for Web Developer position
 
 ## Table of contents
