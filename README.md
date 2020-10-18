@@ -85,14 +85,14 @@ php artisan migrate
 
 * Inside the folder resources/views, copy/create file namely:
 
-  -additional_props.blade.php
-  -footerplugins.blade.php
-  -headerplugins.blade.php
-  -log_in.blade.php
-  -mail_send_to_email.blade.php
-  -register.blade.php
-  -success_page_blade.php
-  -validation_email.blade.php
+  *additional_props.blade.php
+  *footerplugins.blade.php
+  *headerplugins.blade.php
+  *log_in.blade.php
+  *mail_send_to_email.blade.php
+  *register.blade.php
+  *success_page_blade.php
+  *validation_email.blade.php
 
 * Copy the file or use terminal and copy paste the code under it to create controller under app/Http/Controllers
 ```
@@ -107,7 +107,7 @@ php artisan make:controller RegistrationSystemController
 
 * You can create a virtual host by pointing it to C://xampp/htdocs/apungan_registration_system/public.
 
-* After all the said above are done, access the project using 'https://127.0.0.1/register'
+* After all the said above are done, access the project using 'localhost/register'
 
 
 ## Author : John Floyd Apungan
